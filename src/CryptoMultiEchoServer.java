@@ -72,10 +72,17 @@ public class CryptoMultiEchoServer {
                 // get the initialization vector from the client
                 // each client will have a different vector
                 byte[] iv = (byte[]) objectInput.readObject();
+                System.out.println("recieved IV");
                 // we will use AES encryption, CBC chaining and PCS5 block padding
                 Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                // generate an AES key derived from randomBytes array
+                Cipher newCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 SecretKeySpec secretKey = new SecretKeySpec(randomBytes, "AES");
+                newCipher.init(Cipher.ENCRYPT_MODE, secretKey);
+                byte[] newIV = newCipher.getIV();
+                objectOutput.writeObject(newIV);
+                System.out.println("sent newIV");
+                // generate an AES key derived from randomBytes array
+
                 // initialize with a specific vector instead of a random one
                 cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
 
@@ -85,13 +92,24 @@ public class CryptoMultiEchoServer {
                 for (;;) {
                     // get the encrypted bytes from the client as an object
                     byte[] encryptedByte = (byte[]) objectInput.readObject();
+                    System.out.println("Recieved Encrypted byte");
                     // decrypt the bytes
                     String str = new String(cipher.doFinal(encryptedByte));
+                    System.out.println("Dycrypted byte");
+
+
+                    //objectOutput.writeObject(iv);
+
+                    byte[] newEncryptedByte = newCipher.doFinal(str.getBytes());
+                    System.out.println("echoed string is encrypted");
+                    objectOutput.writeObject(newEncryptedByte);
+                    System.out.println("Object sent");
+                    out.flush();
                     // reply to the client with an echo of the string
                     // this reply is not encrypted, you need to modify this
                     // by encrypting the reply
-                    out.println("Echo: " + str);
-                    out.flush();
+                    //out.println("Echo: " + str);
+                    //out.flush();
                     // print the message received from the client
                     System.out.println("Received from session " + id + ": " + str);
                     if (str.trim().equals("BYE")) {

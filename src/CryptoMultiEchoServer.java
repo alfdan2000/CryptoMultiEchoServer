@@ -75,10 +75,12 @@ public class CryptoMultiEchoServer {
 
                 // we will use AES encryption, CBC chaining and PCS5 block padding
                 Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                /** Creates new AES encryption*/
                 Cipher newCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 SecretKeySpec secretKey = new SecretKeySpec(randomBytes, "AES");
                 newCipher.init(Cipher.ENCRYPT_MODE, secretKey);
                 byte[] newIV = newCipher.getIV();
+                /** Sends new vector to Client*/
                 objectOutput.writeObject(newIV);
 
                 // generate an AES key derived from randomBytes array
@@ -96,8 +98,10 @@ public class CryptoMultiEchoServer {
                     // decrypt the bytes
                     String str = new String(cipher.doFinal(encryptedByte));
 
+                    /** Re-encrypts string to send to client*/
                     byte[] newEncryptedByte = newCipher.doFinal(str.getBytes());
 
+                    /** Sends encrypts message to Client*/
                     objectOutput.writeObject(newEncryptedByte);
 
                     out.flush();
